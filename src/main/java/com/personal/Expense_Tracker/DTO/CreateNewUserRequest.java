@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import lombok.Data;
 
 @Data
-public class CreateNewUserRequest {git
+public class CreateNewUserRequest {
     private String name;
 
     private String userName;
