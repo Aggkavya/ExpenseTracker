@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import static com.personal.Expense_Tracker.entity.ROLE.ROLE_USER;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -41,10 +42,14 @@ public class UserService {
 
         //check for null balance
         if(balanceRequest.getBankBalance() != null){
-            user.setBankBalance(balanceRequest.getBankBalance());
+            BigDecimal roundedBank = balanceRequest.getBankBalance()
+                    .setScale(2, RoundingMode.HALF_UP);
+            user.setBankBalance(roundedBank);
         }
         if(balanceRequest.getCashInHand() != null){
-            user.setCashInHand(balanceRequest.getCashInHand());
+            BigDecimal roundedBank = balanceRequest.getCashInHand()
+                    .setScale(2, RoundingMode.HALF_UP);
+            user.setCashInHand(roundedBank);
         }
         //save user
         userRepository.save(user);
