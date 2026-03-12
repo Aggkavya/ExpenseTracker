@@ -47,9 +47,9 @@ public class UserService {
             user.setBankBalance(roundedBank);
         }
         if(balanceRequest.getCashInHand() != null){
-            BigDecimal roundedBank = balanceRequest.getCashInHand()
+            BigDecimal roundedCash = balanceRequest.getCashInHand()
                     .setScale(2, RoundingMode.HALF_UP);
-            user.setCashInHand(roundedBank);
+            user.setCashInHand(roundedCash);
         }
         //save user
         userRepository.save(user);
