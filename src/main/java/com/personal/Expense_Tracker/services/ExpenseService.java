@@ -13,11 +13,13 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 public class ExpenseService {
@@ -95,6 +97,15 @@ public class ExpenseService {
         expenseRepository.save(expense);
 
         return response;
+    }
+
+    public List<Expense> getAllExpenses() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+        User user = userRepository.findByUserName(userName);
+        List<Expense> expenses = expenseRepository.findByUserIdOrderByDateDesc(user.getId());
+        return expenses;
+
     }
 
 }
