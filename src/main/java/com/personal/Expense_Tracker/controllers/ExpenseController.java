@@ -3,6 +3,7 @@ package com.personal.Expense_Tracker.controllers;
 import com.personal.Expense_Tracker.DTO.CreateExpenseRequest;
 import com.personal.Expense_Tracker.DTO.CreateExpenseResponse;
 import com.personal.Expense_Tracker.DTO.GetExpenseResponse;
+import com.personal.Expense_Tracker.entity.Category;
 import com.personal.Expense_Tracker.entity.Expense;
 import com.personal.Expense_Tracker.repositry.ExpenseRepository;
 import com.personal.Expense_Tracker.services.ExpenseService;
@@ -30,6 +31,11 @@ public class ExpenseController {
         List<GetExpenseResponse> allExpenses = expenseService.getAllExpenses();
         return new ResponseEntity<>(allExpenses, HttpStatus.OK);
 
+    }
+    @GetMapping("/allExpenses/{category}")
+    public ResponseEntity<?> getAllExpensesByCategory(@PathVariable Category category){
+        List<GetExpenseResponse> expenses = expenseService.getAllExpensesByCategory(category);
+        return new ResponseEntity<>(expenses, HttpStatus.OK);
     }
 
 }

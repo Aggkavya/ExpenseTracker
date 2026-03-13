@@ -126,6 +126,23 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
+    public List<GetExpenseResponse> getAllExpensesByCategory(Category category){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+        User user = userRepository.findByUserName(userName);
+        List<Expense> expenses = expenseRepository.findByUserIdAndCategoryOrderByDateDesc(user.getId(), category);
+
+        return expenses.stream().map(expense -> {
+            GetExpenseResponse dto = new GetExpenseResponse();
+            dto.setPaymentMode(expense.getPaymentMode());
+            dto.setCategory(expense.getCategory());
+            dto.setAmount(expense.getAmount());
+            dto.setDate(expense.getDate());
+            dto.setDescription(expense.getDescription());
+            dto.setId(expense.getId());
+            return dto;
+        }).collect(Collectors.toList());
+    }
 
 
     }
