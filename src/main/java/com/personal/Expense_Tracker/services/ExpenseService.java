@@ -2,6 +2,7 @@ package com.personal.Expense_Tracker.services;
 
 import com.personal.Expense_Tracker.DTO.CreateExpenseRequest;
 import com.personal.Expense_Tracker.DTO.CreateExpenseResponse;
+import com.personal.Expense_Tracker.DTO.GetExpenseResponse;
 import com.personal.Expense_Tracker.entity.Category;
 import com.personal.Expense_Tracker.entity.Expense;
 import com.personal.Expense_Tracker.entity.PaymentMode;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpenseService {
@@ -99,13 +101,33 @@ public class ExpenseService {
         return response;
     }
 
-    public List<Expense> getAllExpenses() {
+    public List<GetExpenseResponse> getAllExpenses() {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
+
         User user = userRepository.findByUserName(userName);
+
         List<Expense> expenses = expenseRepository.findByUserIdOrderByDateDesc(user.getId());
-        return expenses;
+
+        return expenses.stream().map(expense -> {
+
+            GetExpenseResponse dto = new GetExpenseResponse();
+
+            dto.setAmount(expense.getAmount());
+            dto.setCategory(expense.getCategory());
+            dto.setDate(expense.getDate());
+            dto.setId(expense.getId());
+            dto.setDescription(expense.getDescription());
+            dto.setPaymentMode(expense.getPaymentMode());
+
+            return dto;
+
+        }).collect(Collectors.toList());
+    }
+
+
 
     }
 
-}
+
