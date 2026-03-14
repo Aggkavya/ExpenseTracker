@@ -94,7 +94,6 @@ public class ExpenseService {
         expense.setDescription(expenseRequest.getDescription());
         response.setDescription(expenseRequest.getDescription());
 
-        user.getAllExpenses().add(expense);
         userRepository.save(user);
         expenseRepository.save(expense);
 
@@ -126,7 +125,7 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
-    public List<GetExpenseResponse> getAllExpensesByCategory(Category category){
+    public List<GetExpenseResponse> getAllExpensesByCategory(Category category) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
         User user = userRepository.findByUserName(userName);
@@ -144,7 +143,4 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
-
-    }
-
-
+}

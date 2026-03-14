@@ -32,10 +32,15 @@ public class ExpenseController {
         return new ResponseEntity<>(allExpenses, HttpStatus.OK);
 
     }
+
     @GetMapping("/allExpenses/{category}")
-    public ResponseEntity<?> getAllExpensesByCategory(@PathVariable Category category){
+    public ResponseEntity<?> getAllExpensesByCategory(@PathVariable Category category) {
         List<GetExpenseResponse> expenses = expenseService.getAllExpensesByCategory(category);
         return new ResponseEntity<>(expenses, HttpStatus.OK);
     }
 
+    @GetMapping()
+    public ResponseEntity<?> getAllExpensesByDate() {
+        return ResponseEntity.ok(null);
+    }
 }
