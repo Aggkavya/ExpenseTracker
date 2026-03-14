@@ -165,6 +165,13 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
+    public BigDecimal getTotalExpenseFilter(Category category, Date startDate, Date endDate){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+        User user = userRepository.findByUserName(userName);
+        BigDecimal total = expenseRepository.calculateTotalExpense(user.getId(), category, startDate, endDate);
+        return total;
+    }
 
 }
 

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -46,5 +47,13 @@ public class ExpenseController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
         List<GetExpenseResponse> filteredExpenses = expenseService.getFilteredExpenses(category , startDate, endDate);
         return new ResponseEntity<>(filteredExpenses, HttpStatus.OK);
+    }
+    @GetMapping("/total")
+    public ResponseEntity<?> totalExpenseByFilter(
+            @RequestParam(required = false) Category category,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
+        BigDecimal total = expenseService.getTotalExpenseFilter(category, startDate, endDate);
+        return new ResponseEntity<>(total, HttpStatus.OK);
     }
 }
