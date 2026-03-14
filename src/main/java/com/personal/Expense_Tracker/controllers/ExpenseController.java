@@ -4,14 +4,14 @@ import com.personal.Expense_Tracker.DTO.CreateExpenseRequest;
 import com.personal.Expense_Tracker.DTO.CreateExpenseResponse;
 import com.personal.Expense_Tracker.DTO.GetExpenseResponse;
 import com.personal.Expense_Tracker.entity.Category;
-import com.personal.Expense_Tracker.entity.Expense;
-import com.personal.Expense_Tracker.repositry.ExpenseRepository;
 import com.personal.Expense_Tracker.services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -39,8 +39,12 @@ public class ExpenseController {
         return new ResponseEntity<>(expenses, HttpStatus.OK);
     }
 
-    @GetMapping()
-    public ResponseEntity<?> getAllExpensesByDate() {
-        return ResponseEntity.ok(null);
+    @GetMapping("/filter")
+    public ResponseEntity<?> getAllExpensesByFilter(
+            @RequestParam(required = false) Category category,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
+        List<GetExpenseResponse> filteredExpenses = expenseService.getFilteredExpenses(category , startDate, endDate);
+        return new ResponseEntity<>(filteredExpenses, HttpStatus.OK);
     }
 }

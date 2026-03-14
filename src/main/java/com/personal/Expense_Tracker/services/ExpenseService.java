@@ -14,12 +14,12 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -143,4 +143,28 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
+    public List<GetExpenseResponse> getFilteredExpenses(Category category, Date startDate, Date endDate){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+        User user = userRepository.findByUserName(userName);
+        List<Expense> filteredExpenses = expenseRepository.findFilteredExpenses(user.getId(), category,
+                startDate, endDate);
+        return filteredExpenses.stream().map(expense -> {
+
+            GetExpenseResponse dto = new GetExpenseResponse();
+
+            dto.setAmount(expense.getAmount());
+            dto.setCategory(expense.getCategory());
+            dto.setDate(expense.getDate());
+            dto.setId(expense.getId());
+            dto.setDescription(expense.getDescription());
+            dto.setPaymentMode(expense.getPaymentMode());
+
+            return dto;
+
+        }).collect(Collectors.toList());
+    }
+
+
 }
+
