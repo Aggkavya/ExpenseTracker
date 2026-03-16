@@ -2,6 +2,7 @@ package com.personal.Expense_Tracker.repositry;
 
 import com.personal.Expense_Tracker.entity.Category;
 import com.personal.Expense_Tracker.entity.Expense;
+import com.personal.Expense_Tracker.entity.PaymentMode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -38,5 +39,15 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
                                      @Param("startDate") Date startDate,
                                      @Param("endDate") Date endDate);
 
-
+    // 3. Combined method for Total by specific Payment Mode (Replaces the two separate ones)
+    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.user.id = :userId "+
+            " AND e.paymentMode = :paymentMode " +  // Check the specific PaymentMode passed
+            " AND (cast(:category as string) IS NULL OR e.category = :category) " +
+            " AND (cast(:startDate as timestamp) IS NULL OR e.date >= :startDate) "+
+            " AND (cast(:endDate as timestamp) IS NULL OR e.date <= :endDate) ")
+    BigDecimal calculateTotalExpenseByPaymentMode(@Param("userId") Long userId,
+                                                  @Param("paymentMode") PaymentMode paymentMode, // Accept as param
+                                                  @Param("category") Category category,
+                                                  @Param("startDate") Date startDate,
+                                                  @Param("endDate") Date endDate);
 }

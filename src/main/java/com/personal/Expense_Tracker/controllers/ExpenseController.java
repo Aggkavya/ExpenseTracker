@@ -3,6 +3,7 @@ package com.personal.Expense_Tracker.controllers;
 import com.personal.Expense_Tracker.DTO.CreateExpenseRequest;
 import com.personal.Expense_Tracker.DTO.CreateExpenseResponse;
 import com.personal.Expense_Tracker.DTO.GetExpenseResponse;
+import com.personal.Expense_Tracker.DTO.GetTotalAmountExpense;
 import com.personal.Expense_Tracker.entity.Category;
 import com.personal.Expense_Tracker.services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,7 @@ public class ExpenseController {
             @RequestParam(required = false) Category category,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
-        BigDecimal total = expenseService.getTotalExpenseFilter(category, startDate, endDate);
+        GetTotalAmountExpense total = expenseService.getTotalExpenseFilter(category, startDate, endDate);
         return new ResponseEntity<>(total, HttpStatus.OK);
     }
 }

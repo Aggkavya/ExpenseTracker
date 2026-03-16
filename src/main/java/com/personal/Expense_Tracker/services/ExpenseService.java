@@ -3,6 +3,7 @@ package com.personal.Expense_Tracker.services;
 import com.personal.Expense_Tracker.DTO.CreateExpenseRequest;
 import com.personal.Expense_Tracker.DTO.CreateExpenseResponse;
 import com.personal.Expense_Tracker.DTO.GetExpenseResponse;
+import com.personal.Expense_Tracker.DTO.GetTotalAmountExpense;
 import com.personal.Expense_Tracker.entity.Category;
 import com.personal.Expense_Tracker.entity.Expense;
 import com.personal.Expense_Tracker.entity.PaymentMode;
@@ -165,12 +166,18 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
-    public BigDecimal getTotalExpenseFilter(Category category, Date startDate, Date endDate){
+    public GetTotalAmountExpense getTotalExpenseFilter(Category category, Date startDate, Date endDate){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
         User user = userRepository.findByUserName(userName);
         BigDecimal total = expenseRepository.calculateTotalExpense(user.getId(), category, startDate, endDate);
-        return total;
+        BigDecimal cash = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(), PaymentMode.CASH, category, startDate, endDate);
+        BigDecimal online = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(),PaymentMode.ONLINE, category, startDate, endDate);
+        GetTotalAmountExpense expense = new GetTotalAmountExpense();
+        expense.setTotalExpense(total);
+        expense.setTotalCashExpense(cash);
+        expense.setTotalOnlineExpense(online);
+        return expense;
     }
 
 }
