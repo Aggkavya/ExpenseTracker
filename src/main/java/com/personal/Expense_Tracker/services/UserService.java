@@ -40,25 +40,39 @@ public class UserService {
         String userName = authentication.getName();
         User user = userRepository.findByUserName(userName);
 
-        //check for null balance
-        if(balanceRequest.getBankBalance() != null){
+        // check for null balance
+        if (balanceRequest.getBankBalance() != null) {
             BigDecimal roundedBank = balanceRequest.getBankBalance()
                     .setScale(2, RoundingMode.HALF_UP);
             user.setBankBalance(roundedBank);
         }
-        if(balanceRequest.getCashInHand() != null){
+        if (balanceRequest.getCashInHand() != null) {
             BigDecimal roundedCash = balanceRequest.getCashInHand()
                     .setScale(2, RoundingMode.HALF_UP);
             user.setCashInHand(roundedCash);
         }
-        //save user
+        // save user
         userRepository.save(user);
-        //map to response
+        // map to response
         UpdateBalanceResponse response = new UpdateBalanceResponse();
         response.setBankBalance(user.getBankBalance());
         response.setCashInHand(user.getCashInHand());
         return response;
 
+    }
+
+    public UpdateBalanceResponse getBalance() {
+        // 1. Get the current logged-in user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+        User user = userRepository.findByUserName(userName);
+
+        // 2. Map their balances to the response DTO
+        UpdateBalanceResponse response = new UpdateBalanceResponse();
+        response.setBankBalance(user.getBankBalance());
+        response.setCashInHand(user.getCashInHand());
+
+        return response;
     }
 
     private User mapToUser(CreateNewUserRequest newUser) {

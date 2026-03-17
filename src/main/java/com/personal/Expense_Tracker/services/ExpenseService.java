@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -174,11 +175,38 @@ public class ExpenseService {
         BigDecimal cash = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(), PaymentMode.CASH, category, startDate, endDate);
         BigDecimal online = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(),PaymentMode.ONLINE, category, startDate, endDate);
         GetTotalAmountExpense expense = new GetTotalAmountExpense();
-        expense.setTotalExpense(total);
-        expense.setTotalCashExpense(cash);
-        expense.setTotalOnlineExpense(online);
+        expense.setTotalExpense(total = total == null ? BigDecimal.ZERO : total);
+        expense.setTotalCashExpense(cash = cash == null ? BigDecimal.ZERO : cash);
+        expense.setTotalOnlineExpense(online = online == null ? BigDecimal.ZERO : online);
         return expense;
     }
+    @Transactional
+    public void DeleteExpenseById(Long id){
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserName(userName);
+        Long userId = user.getId();
+
+        try {
+            Expense expense = expenseRepository.findById(id).orElseThrow(()->new RuntimeException("no expense with id"));
+            if(expense.getUser().getId().equals(userId)){
+                if(expense.getPaymentMode().equals(PaymentMode.CASH)){
+                    user.setCashInHand(user.getCashInHand().add(expense.getAmount()));
+                }else{
+                    user.setBankBalance(user.getBankBalance().add(expense.getAmount()));
+                }
+                expenseRepository.deleteById(id);
+                userRepository.save(user);
+            }else{
+                throw new RuntimeException("expense doesn't belong to the user");
+            }
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
 
 }
 

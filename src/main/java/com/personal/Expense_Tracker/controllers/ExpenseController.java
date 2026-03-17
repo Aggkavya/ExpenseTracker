@@ -45,16 +45,23 @@ public class ExpenseController {
     public ResponseEntity<?> getAllExpensesByFilter(
             @RequestParam(required = false) Category category,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
-        List<GetExpenseResponse> filteredExpenses = expenseService.getFilteredExpenses(category , startDate, endDate);
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+        List<GetExpenseResponse> filteredExpenses = expenseService.getFilteredExpenses(category, startDate, endDate);
         return new ResponseEntity<>(filteredExpenses, HttpStatus.OK);
     }
+
     @GetMapping("/total")
     public ResponseEntity<?> totalExpenseByFilter(
             @RequestParam(required = false) Category category,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
         GetTotalAmountExpense total = expenseService.getTotalExpenseFilter(category, startDate, endDate);
         return new ResponseEntity<>(total, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteExpense(@RequestParam Long expenseId) {
+        expenseService.DeleteExpenseById(expenseId);
+        return new ResponseEntity<>("Expense deleted successfully", HttpStatus.OK);
     }
 }
