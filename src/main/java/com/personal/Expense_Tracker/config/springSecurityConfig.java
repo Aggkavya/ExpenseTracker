@@ -22,7 +22,8 @@ public class springSecurityConfig{
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(request -> request
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(request -> request
                 .requestMatchers("/public/**").permitAll()
                 .anyRequest().authenticated())
                 .csrf(csrf -> csrf.disable())
@@ -30,6 +31,29 @@ public class springSecurityConfig{
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    //for cross origin 
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        
+        // Browsers restrict allowCredentials(true) with "*" 
+        // We explicitly list Vercel and Localhost origins to ensure compatibility!
+        configuration.setAllowedOriginPatterns(java.util.Arrays.asList(
+            "https://*.vercel.app", 
+            "http://localhost:5173", 
+            "http://localhost:3000",
+            "http://localhost:8080"
+        ));
+        
+        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(java.util.Arrays.asList("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowCredentials(true);
+        
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
