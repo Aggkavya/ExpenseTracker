@@ -1,8 +1,8 @@
 package com.personal.Expense_Tracker.services;
 
-import com.personal.Expense_Tracker.DTO.CreateDebtRequest;
-import com.personal.Expense_Tracker.DTO.CreateDebtResponse;
+import com.personal.Expense_Tracker.DTO.*;
 import com.personal.Expense_Tracker.entity.Debt;
+import com.personal.Expense_Tracker.entity.DebtLedger;
 import com.personal.Expense_Tracker.entity.PaymentMode;
 import com.personal.Expense_Tracker.entity.User;
 import com.personal.Expense_Tracker.repositry.DebtLedgerRepository;
@@ -15,6 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DebtService {
@@ -37,7 +40,7 @@ public class DebtService {
         Debt debt = new Debt();
         debt.setUser(user);
 
-        BigDecimal roundedAmount = request.getAmount().setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal roundedAmount = request.getAmount().setScale(2, RoundingMode.HALF_UP);
         debt.setAmount(roundedAmount);
         debt.setRemainingAmount(roundedAmount);
         response.setAmount(roundedAmount);
@@ -73,15 +76,15 @@ public class DebtService {
         return response;
     }
 
-    public java.util.List<com.personal.Expense_Tracker.DTO.GetDebtResponse> getAllDebts() {
-        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+    public List<GetDebtResponse> getAllDebts() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
-        com.personal.Expense_Tracker.entity.User user = userRepository.findByUserName(userName);
+        User user = userRepository.findByUserName(userName);
 
-        java.util.List<com.personal.Expense_Tracker.entity.Debt> debts = debtRepository.findByUserIdOrderByDateDesc(user.getId());
+        List<Debt> debts = debtRepository.findByUserIdOrderByDateDesc(user.getId());
 
         return debts.stream().map(debt -> {
-            com.personal.Expense_Tracker.DTO.GetDebtResponse dto = new com.personal.Expense_Tracker.DTO.GetDebtResponse();
+            GetDebtResponse dto = new GetDebtResponse();
             dto.setId(debt.getId());
             dto.setAmount(debt.getAmount());
             dto.setRemainingAmount(debt.getRemainingAmount());
@@ -90,8 +93,8 @@ public class DebtService {
             dto.setDate(debt.getDate());
             dto.setIsHistorical(debt.getIsHistorical());
 
-            java.util.List<com.personal.Expense_Tracker.DTO.DebtLedgerResponse> ledgerResponses = debt.getLedgers().stream().map(ledger -> {
-                com.personal.Expense_Tracker.DTO.DebtLedgerResponse lDto = new com.personal.Expense_Tracker.DTO.DebtLedgerResponse();
+            List<DebtLedgerResponse> ledgerResponses = debt.getLedgers().stream().map(ledger -> {
+                com.personal.Expense_Tracker.DTO.DebtLedgerResponse lDto = new DebtLedgerResponse();
                 lDto.setId(ledger.getId());
                 lDto.setAmount(ledger.getAmount());
                 lDto.setPaymentMode(ledger.getPaymentMode());
@@ -105,28 +108,28 @@ public class DebtService {
         }).collect(java.util.stream.Collectors.toList());
     }
 
-    @org.springframework.transaction.annotation.Transactional
-    public com.personal.Expense_Tracker.DTO.PayDebtResponse payDebt(com.personal.Expense_Tracker.DTO.PayDebtRequest request) {
-        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+    @Transactional
+    public PayDebtResponse payDebt(PayDebtRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
-        com.personal.Expense_Tracker.entity.User user = userRepository.findByUserName(userName);
+        User user = userRepository.findByUserName(userName);
 
-        com.personal.Expense_Tracker.entity.Debt debt = debtRepository.findById(request.getDebtId())
+        Debt debt = debtRepository.findById(request.getDebtId())
                 .orElseThrow(() -> new RuntimeException("Debt not found"));
 
         if (!debt.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Debt doesn't belong to the user");
         }
 
-        java.math.BigDecimal payAmount = request.getAmount().setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal payAmount = request.getAmount().setScale(2, RoundingMode.HALF_UP);
 
         if (debt.getRemainingAmount().compareTo(payAmount) < 0) {
             throw new RuntimeException("Payment amount exceeds remaining debt");
         }
 
-        com.personal.Expense_Tracker.entity.PaymentMode payMode = request.getPaymentMode() != null ? request.getPaymentMode() : com.personal.Expense_Tracker.entity.PaymentMode.CASH;
+        PaymentMode payMode = request.getPaymentMode() != null ? request.getPaymentMode() : com.personal.Expense_Tracker.entity.PaymentMode.CASH;
 
-        if (payMode == com.personal.Expense_Tracker.entity.PaymentMode.CASH) {
+        if (payMode == PaymentMode.CASH) {
             if (user.getCashInHand().compareTo(payAmount) < 0) {
                 throw new RuntimeException("Insufficient Cash in Hand balance");
             }
@@ -140,7 +143,7 @@ public class DebtService {
 
         debt.setRemainingAmount(debt.getRemainingAmount().subtract(payAmount));
 
-        com.personal.Expense_Tracker.entity.DebtLedger ledger = new com.personal.Expense_Tracker.entity.DebtLedger();
+        DebtLedger ledger = new DebtLedger();
         ledger.setDebt(debt);
         ledger.setAmount(payAmount);
         ledger.setPaymentMode(payMode);
@@ -151,7 +154,7 @@ public class DebtService {
         debtRepository.save(debt);
         userRepository.save(user);
 
-        com.personal.Expense_Tracker.DTO.PayDebtResponse response = new com.personal.Expense_Tracker.DTO.PayDebtResponse();
+        PayDebtResponse response = new PayDebtResponse();
         response.setLedgerId(ledger.getId());
         response.setDebtId(debt.getId());
         response.setPaidAmount(payAmount);
@@ -165,27 +168,51 @@ public class DebtService {
         return response;
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    public List<GetDebtHistoryResponse> getDebtHistory(Long debtId){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+        User user = userRepository.findByUserName(userName);
+        Debt debt = debtRepository.findById(debtId).orElseThrow(() -> new RuntimeException("Debt with id not found"));
+        if(!debt.getUser().getId().equals(user.getId())){
+            throw new RuntimeException("debt does not belong to the user");
+
+        }
+        List<DebtLedger> byDebtId = debtLedgerRepository.findByDebtId(debtId);
+
+        return byDebtId.stream().map(debtLedger -> {
+            GetDebtHistoryResponse DTO = new GetDebtHistoryResponse();
+            DTO.setDate(debtLedger.getDate());
+            DTO.setDescription(debtLedger.getDescription());
+            DTO.setId(debtLedger.getId());
+            DTO.setPaymentMode(debtLedger.getPaymentMode());
+            DTO.setAmountPaid(debtLedger.getAmount());
+            return DTO;
+        }).collect(Collectors.toList());
+
+
+    }
+
+    @Transactional
     public void deleteDebt(Long id) {
-        String userName = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        com.personal.Expense_Tracker.entity.User user = userRepository.findByUserName(userName);
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserName(userName);
         Long userId = user.getId();
 
-        com.personal.Expense_Tracker.entity.Debt debt = debtRepository.findById(id).orElseThrow(() -> new RuntimeException("Debt not found"));
+        Debt debt = debtRepository.findById(id).orElseThrow(() -> new RuntimeException("Debt not found"));
         if (!debt.getUser().getId().equals(userId)) {
             throw new RuntimeException("Debt doesn't belong to the user");
         }
 
         if (debt.getIsHistorical() == null || !debt.getIsHistorical()) {
-            if (debt.getPaymentMode() == com.personal.Expense_Tracker.entity.PaymentMode.CASH) {
+            if (debt.getPaymentMode() == PaymentMode.CASH) {
                 user.setCashInHand(user.getCashInHand().subtract(debt.getAmount()));
             } else {
                 user.setBankBalance(user.getBankBalance().subtract(debt.getAmount()));
             }
         }
 
-        for (com.personal.Expense_Tracker.entity.DebtLedger ledger : debt.getLedgers()) {
-            if (ledger.getPaymentMode() == com.personal.Expense_Tracker.entity.PaymentMode.CASH) {
+        for (DebtLedger ledger : debt.getLedgers()) {
+            if (ledger.getPaymentMode() == PaymentMode.CASH) {
                 user.setCashInHand(user.getCashInHand().add(ledger.getAmount()));
             } else {
                 user.setBankBalance(user.getBankBalance().add(ledger.getAmount()));

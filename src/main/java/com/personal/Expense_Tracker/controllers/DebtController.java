@@ -38,4 +38,10 @@ public class DebtController {
         debtService.deleteDebt(debtId);
         return new ResponseEntity<>("Debt and related ledgers deleted successfully", HttpStatus.OK);
     }
+
+    @GetMapping("/{debtId}/history")
+    public ResponseEntity<?> debtResponseHistory(@PathVariable Long debtId) {
+        List<GetDebtHistoryResponse> history = debtService.getDebtHistory(debtId);
+        return new ResponseEntity<>(history, HttpStatus.OK);
+    }
 }
