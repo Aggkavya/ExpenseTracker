@@ -8,6 +8,7 @@ import com.personal.Expense_Tracker.entity.Category;
 import com.personal.Expense_Tracker.entity.Expense;
 import com.personal.Expense_Tracker.entity.PaymentMode;
 import com.personal.Expense_Tracker.entity.User;
+import com.personal.Expense_Tracker.exceptions.InsufficientBalanceException;
 import com.personal.Expense_Tracker.repositry.ExpenseRepository;
 import com.personal.Expense_Tracker.repositry.UserRepository;
 
@@ -68,13 +69,11 @@ public class ExpenseService {
             // handling balance
             if (expenseRequest.getPaymentMode() == PaymentMode.CASH) {
                 if (user.getCashInHand().compareTo(roundCash) < 0) {
-                    throw new RuntimeException("Insufficient Cash in Hand balance");
+                    throw new InsufficientBalanceException("Insufficient Cash in Hand balance");
                 }
                 user.setCashInHand(user.getCashInHand().subtract(roundCash));
             } else {
-                if (user.getBankBalance().compareTo(roundCash) < 0) {
-                    throw new RuntimeException("Insufficient Bank balance");
-                }
+
                 user.setBankBalance(user.getBankBalance().subtract(roundCash));
             }
 
@@ -145,7 +144,7 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
-    public List<GetExpenseResponse> getFilteredExpenses(Category category, Date startDate, Date endDate){
+    public List<GetExpenseResponse> getFilteredExpenses(Category category, Date startDate, Date endDate) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
         User user = userRepository.findByUserName(userName);
@@ -167,36 +166,40 @@ public class ExpenseService {
         }).collect(Collectors.toList());
     }
 
-    public GetTotalAmountExpense getTotalExpenseFilter(Category category, Date startDate, Date endDate){
+    public GetTotalAmountExpense getTotalExpenseFilter(Category category, Date startDate, Date endDate) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userName = authentication.getName();
         User user = userRepository.findByUserName(userName);
         BigDecimal total = expenseRepository.calculateTotalExpense(user.getId(), category, startDate, endDate);
-        BigDecimal cash = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(), PaymentMode.CASH, category, startDate, endDate);
-        BigDecimal online = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(),PaymentMode.ONLINE, category, startDate, endDate);
+        BigDecimal cash = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(), PaymentMode.CASH, category,
+                startDate, endDate);
+        BigDecimal online = expenseRepository.calculateTotalExpenseByPaymentMode(user.getId(), PaymentMode.ONLINE,
+                category, startDate, endDate);
         GetTotalAmountExpense expense = new GetTotalAmountExpense();
         expense.setTotalExpense(total = total == null ? BigDecimal.ZERO : total);
         expense.setTotalCashExpense(cash = cash == null ? BigDecimal.ZERO : cash);
         expense.setTotalOnlineExpense(online = online == null ? BigDecimal.ZERO : online);
         return expense;
     }
+
     @Transactional
-    public void DeleteExpenseById(Long id){
+    public void DeleteExpenseById(Long id) {
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUserName(userName);
         Long userId = user.getId();
 
         try {
-            Expense expense = expenseRepository.findById(id).orElseThrow(()->new RuntimeException("no expense with id"));
-            if(expense.getUser().getId().equals(userId)){
-                if(expense.getPaymentMode().equals(PaymentMode.CASH)){
+            Expense expense = expenseRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("no expense with id"));
+            if (expense.getUser().getId().equals(userId)) {
+                if (expense.getPaymentMode().equals(PaymentMode.CASH)) {
                     user.setCashInHand(user.getCashInHand().add(expense.getAmount()));
-                }else{
+                } else {
                     user.setBankBalance(user.getBankBalance().add(expense.getAmount()));
                 }
                 expenseRepository.deleteById(id);
                 userRepository.save(user);
-            }else{
+            } else {
                 throw new RuntimeException("expense doesn't belong to the user");
             }
 
@@ -204,9 +207,6 @@ public class ExpenseService {
             throw new RuntimeException(e);
         }
 
-
     }
 
-
 }
-
