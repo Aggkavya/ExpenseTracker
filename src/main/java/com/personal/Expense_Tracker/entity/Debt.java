@@ -37,6 +37,8 @@ public class Debt {
     @JoinColumn(name = "user_id")
     private User user;
 
+
+
     @Builder.Default
     @OneToMany(mappedBy = "debt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DebtLedger> ledgers = new ArrayList<>();

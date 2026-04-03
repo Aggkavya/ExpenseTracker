@@ -11,8 +11,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -63,5 +61,11 @@ public class ExpenseController {
     public ResponseEntity<?> deleteExpense(@RequestParam Long expenseId) {
         expenseService.DeleteExpenseById(expenseId);
         return new ResponseEntity<>("Expense deleted successfully", HttpStatus.OK);
+    }
+
+    @PutMapping("/updateExpense/{expenseId}")
+    public ResponseEntity<?> updateExpenseById(@RequestBody CreateExpenseRequest request, @PathVariable Long expenseId) {
+        GetExpenseResponse updated = expenseService.updateExpenseById(expenseId, request);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 }

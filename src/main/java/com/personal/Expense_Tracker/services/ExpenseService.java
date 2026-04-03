@@ -183,6 +183,68 @@ public class ExpenseService {
     }
 
     @Transactional
+    public GetExpenseResponse updateExpenseById(Long expenseId, CreateExpenseRequest request) {
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserName(userName);
+
+        // 1. Find the existing expense — fail fast if not found or not owned by user
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found with id: " + expenseId));
+
+        if (!expense.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Expense doesn't belong to the current user");
+        }
+
+        // 2. REVERSE the old balance effect
+        //    Add back the OLD amount to whichever balance was deducted before
+        if (expense.getPaymentMode() == PaymentMode.CASH) {
+            user.setCashInHand(user.getCashInHand().add(expense.getAmount()));
+        } else {
+            user.setBankBalance(user.getBankBalance().add(expense.getAmount()));
+        }
+
+        // 3. Apply the NEW amount to the (possibly changed) payment mode
+        BigDecimal newAmount = request.getAmount().setScale(2, RoundingMode.HALF_UP);
+        PaymentMode newMode = request.getPaymentMode() != null ? request.getPaymentMode() : expense.getPaymentMode();
+
+        if (newMode == PaymentMode.CASH) {
+            if (user.getCashInHand().compareTo(newAmount) < 0) {
+                throw new InsufficientBalanceException("Insufficient Cash in Hand balance");
+            }
+            user.setCashInHand(user.getCashInHand().subtract(newAmount));
+        } else {
+            if (user.getBankBalance().compareTo(newAmount) < 0) {
+                throw new InsufficientBalanceException("Insufficient Bank balance");
+            }
+            user.setBankBalance(user.getBankBalance().subtract(newAmount));
+        }
+
+        // 4. Update the expense fields (only update fields that are provided)
+        expense.setAmount(newAmount);
+        expense.setPaymentMode(newMode);
+        if (request.getCategory() != null) {
+            expense.setCategory(request.getCategory());
+        }
+        if (request.getDescription() != null) {
+            expense.setDescription(request.getDescription());
+        }
+
+        // 5. Save both user (updated balance) and expense
+        userRepository.save(user);
+        expenseRepository.save(expense);
+
+        // 6. Map and return the updated expense as a DTO
+        GetExpenseResponse dto = new GetExpenseResponse();
+        dto.setId(expense.getId());
+        dto.setAmount(expense.getAmount());
+        dto.setCategory(expense.getCategory());
+        dto.setPaymentMode(expense.getPaymentMode());
+        dto.setDescription(expense.getDescription());
+        dto.setDate(expense.getDate());
+        return dto;
+    }
+
+    @Transactional
     public void DeleteExpenseById(Long id) {
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUserName(userName);
