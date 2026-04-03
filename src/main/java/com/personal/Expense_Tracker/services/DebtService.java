@@ -9,6 +9,7 @@ import com.personal.Expense_Tracker.repositry.DebtLedgerRepository;
 import com.personal.Expense_Tracker.repositry.DebtRepository;
 import com.personal.Expense_Tracker.repositry.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class DebtService {
     @Autowired
