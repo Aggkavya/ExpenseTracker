@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.personal.Expense_Tracker.repositry.UserRepository;
@@ -19,6 +20,11 @@ import com.personal.Expense_Tracker.repositry.UserRepository;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUser(@RequestParam String query) {
+        return ResponseEntity.ok(userService.searchUser(query));
+    }
 
     @PutMapping("/updateBalance")
     public ResponseEntity<?> updateBalance(@RequestBody UpdateBalanceRequest updateBalanceRequest) {

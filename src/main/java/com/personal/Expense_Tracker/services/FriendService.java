@@ -45,23 +45,22 @@ public class FriendService {
         return dto;
     }
 
-    // ── 1. Send Friend Request ────────────────────────────────────────────────
 
     public FriendRequestResponse sendFriendRequest(String receiverUsername) {
         User sender = getCurrentUser();
         User receiver = userRepository.findByUserName(receiverUsername);
 
-        // Validation 1: receiver must exist
+        // receiver must exist
         if (receiver == null) {
             throw new RuntimeException("User not found: " + receiverUsername);
         }
 
-        // Validation 2: can't send to yourself
+        // can't send to yourself
         if (sender.getId().equals(receiver.getId())) {
             throw new RuntimeException("You cannot send a friend request to yourself");
         }
 
-        // Validation 3: check if any request already exists in EITHER direction
+        //check if any request already exists in EITHER direction
         Optional<FriendRequest> existing = friendRepository
                 .findExistingRequest(sender.getId(), receiver.getId());
 
@@ -99,7 +98,7 @@ public class FriendService {
         return toDTO(newRequest);
     }
 
-    // ── 2. My Pending Inbox (requests others sent TO me) ─────────────────────
+    // My Pending Inbox (requests others sent TO me)
 
     public List<FriendRequestResponse> getPendingRequests() {
         User me = getCurrentUser();
@@ -109,7 +108,7 @@ public class FriendService {
         return pending.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    // ── 3. My Sent Requests (still waiting) ──────────────────────────────────
+    //  My Sent Requests (still waiting)
 
     public List<FriendRequestResponse> getSentRequests() {
         User me = getCurrentUser();
@@ -118,7 +117,7 @@ public class FriendService {
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    // ── 4. Accept a Friend Request ───────────────────────────────────────────
+    //  Accept a Friend Request
 
     public FriendRequestResponse acceptRequest(Long requestId) {
         User me = getCurrentUser();

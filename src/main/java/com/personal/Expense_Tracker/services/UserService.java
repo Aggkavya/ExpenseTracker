@@ -4,6 +4,7 @@ import com.personal.Expense_Tracker.DTO.CreateNewUserRequest;
 import com.personal.Expense_Tracker.DTO.CreateNewUserResponse;
 import com.personal.Expense_Tracker.DTO.UpdateBalanceRequest;
 import com.personal.Expense_Tracker.DTO.UpdateBalanceResponse;
+import com.personal.Expense_Tracker.DTO.UserSearchResponse;
 import com.personal.Expense_Tracker.entity.User;
 import com.personal.Expense_Tracker.repositry.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,8 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +79,19 @@ public class UserService {
         response.setCashInHand(user.getCashInHand());
 
         return response;
+    }
+
+    public List<UserSearchResponse> searchUser(String query) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+        User user = userRepository.findByUserName(userName);
+        List<User> users = userRepository.searchUser(query, user.getId());
+        return users.stream().map(u -> {
+            UserSearchResponse response = new UserSearchResponse();
+            response.setName(u.getName());
+            response.setUserName(u.getUserName());
+            return response;
+        }).collect(Collectors.toList());
     }
 
     private User mapToUser(CreateNewUserRequest newUser) {
