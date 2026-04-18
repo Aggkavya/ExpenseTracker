@@ -32,6 +32,8 @@ public class springSecurityConfig{
                         "/v3/api-docs/**",
                         "/v3/api-docs"
                 ).permitAll()
+                // WebSocket handshake endpoint
+                .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

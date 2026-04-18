@@ -3,6 +3,7 @@ package com.personal.Expense_Tracker.services;
 import com.personal.Expense_Tracker.DTO.FriendRequestResponse;
 import com.personal.Expense_Tracker.entity.FriendRequest;
 import com.personal.Expense_Tracker.entity.FriendRequestStatus;
+import com.personal.Expense_Tracker.entity.NotificationType;
 import com.personal.Expense_Tracker.entity.User;
 import com.personal.Expense_Tracker.repositry.FriendRepository;
 import com.personal.Expense_Tracker.repositry.UserRepository;
@@ -25,6 +26,9 @@ public class FriendService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     // ── Helper ────────────────────────────────────────────────────────────────
 
@@ -94,6 +98,13 @@ public class FriendService {
                 .build();
 
         friendRepository.save(newRequest);
+        // Notify the receiver via DB + WebSocket
+        notificationService.create(
+                receiver,
+                NotificationType.FRIEND_REQUEST,
+                sender.getName() + " sent you a friend request",
+                newRequest.getId()
+        );
         log.info("Friend request sent from {} to {}", sender.getUserName(), receiverUsername);
         return toDTO(newRequest);
     }
@@ -136,6 +147,13 @@ public class FriendService {
 
         request.setFriendRequestStatus(FriendRequestStatus.ACCEPTED);
         friendRepository.save(request);
+        // Notify the original sender that their request was accepted
+        notificationService.create(
+                request.getSender(),
+                NotificationType.FRIEND_ACCEPTED,
+                me.getName() + " accepted your friend request",
+                requestId
+        );
         log.info("Friend request {} accepted by {}", requestId, me.getUserName());
         return toDTO(request);
     }
@@ -159,6 +177,13 @@ public class FriendService {
 
         request.setFriendRequestStatus(FriendRequestStatus.REJECTED);
         friendRepository.save(request);
+        // Notify the original sender that their request was rejected
+        notificationService.create(
+                request.getSender(),
+                NotificationType.FRIEND_REJECTED,
+                me.getName() + " rejected your friend request",
+                requestId
+        );
         log.info("Friend request {} rejected by {}", requestId, me.getUserName());
         return toDTO(request);
     }
